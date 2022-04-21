@@ -194,7 +194,7 @@ void print_grid(const char* grid, const int width, const int height) {
     }
     cstr += "\n";
     //cout << grid[width * height];
-    for (int i = 0; i < height; i++) {
+    for (int i = 0; i < height-1; i++) {
         for (int j = 1; j < width-1; j++) {
             if (j == 1) cstr += border;
             cstr += grid[(height * j) + i];
