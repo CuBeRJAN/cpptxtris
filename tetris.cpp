@@ -75,6 +75,7 @@ int key_press() { // not working: F11 (-122, toggles fullscreen)
 #elif defined(__linux__)
 #include <sys/ioctl.h>
 #include <termios.h>
+#include <unistd.h>
 int key_press() { // not working: ¹ (251), num lock (-144), caps lock (-20), windows key (-91), kontext menu key (-93)
     struct termios term;
     tcgetattr(0, &term);
@@ -179,54 +180,75 @@ int key_press() { // not working: ¹ (251), num lock (-144), caps lock (-20), wi
 #endif // Windows/Linux
 
 void init_grid(char* grid, int size, const char fill) {
-    for (int i = 0; i < size+1; i++) {
+    for (int i = 0; i < size; i++) {
         grid[i] = fill;
     }
 }
 
-void print_grid(char* grid, const int width, const int height) {
+void print_grid(const char* grid, const int width, const int height) {
     const char border = '#';
     string cstr;
     cstr += "\n";
-    for (int i = 0; i < width+2; i++) {
+    for (int i = 0; i < width; i++) {
         cstr += border;
     }
     cstr += "\n";
     //cout << grid[width * height];
     for (int i = 0; i < height; i++) {
-        for (int j = 0; j < width; j++) {
-            if (j == 0) cstr += border;
-            if (j < height && i < width+2)
-                cstr += grid[(height * j) + i];
-            if (j == width - 1) cstr += border;
+        for (int j = 1; j < width-1; j++) {
+            if (j == 1) cstr += border;
+            cstr += grid[(height * j) + i];
+            if (j == width - 2) cstr += border;
         }
         cstr += "\n";
     }
-    for (int i = 0; i < width + 2; i++) {
+    for (int i = 0; i < width; i++) {
         cstr += border;
     }
     cout << cstr;
 }
 
 void fill_grid(char* grid, const int width, const int height, const int xpos, const int ypos, char fill) {
-    grid[((xpos-1)*height)+(ypos-1)] = fill;
+    grid[((xpos)*height)+(ypos-1)] = fill;
 }
 
 bool collision_check(const char* grid, const int width, const int height, const char shape[], const int size, const int xpos, const int ypos, const bool toRight) {
     bool toReturn = true;
     for (int i = 0; i < size; i++) {
         for (int j = 0; j < size; j++) {
-            if (toRight && (ypos + (height * j) + i + ((xpos + 1) * height)) < (width*height) && (ypos + (height * j) + i + ((xpos + 1) * height) < (width * height)) > 1){ // Very readable code ahead
+            if (toRight && (ypos + (height * j) + i + ((xpos + 1) * height)) < (width*height) && (ypos + (height * j) + i + ((xpos + 1) * height)) > 1 && (ypos + (height * j) + i + (xpos * height) < width*height && ypos + (height * j) + i + (xpos * height) > 0)){ // Very readable code ahead
                 if (grid[ypos + (height * j) + i + ((xpos + 1)  * height)] == 'O' && grid[ypos + (height * j) + i + ((xpos)*height)] == 'O' && shape[(size * i) + j] == 'O' && shape[(size * i) + j+1] != 'O') {
                     toReturn = false;
                 }
-                if (grid[ypos + (height * j) + i + ((xpos + 1) * height)] != '.') toReturn = false;
+                if (shape[(size * i)+j] == 'O') {
+                    if (xpos + (((size * (i))+j+1)%5) >= width - 1) toReturn = 0; 
+                }
             }
-            if (!toRight && (ypos + (height * j) + i + ((xpos - 1) * height) < (width*height)) && (ypos + (height * j) + i + ((xpos - 1) * height) < (width * height)) > 1) {
-                if (grid[ypos + (height * j) + i + ((xpos - 1) * height)] == 'O' && grid[ypos + (height * j) + i + ((xpos)*height)] == 'O' && shape[(size * i) + j] == 'O' && shape[(size * i) + j-1] != 'O') {
+            if (!toRight && (ypos + (height * j) + i + ((xpos - 1) * height)) < (width*height) && (ypos + (height * j) + i + ((xpos - 1) * height)) > 1 && (ypos + (height * j) + i + (xpos * height) < width*height && ypos + (height * j) + i + (xpos * height) > 0)){
+                if (grid[ypos + (height * j) + i + ((xpos - 1)  * height)] == 'O' && grid[ypos + (height * j) + i + ((xpos)*height)] == 'O' && shape[(size * i) + j] == 'O' && shape[(size * i) + j-1] != 'O') {
                     toReturn = false;
                 }
-                if (grid[ypos + (height * j) + i + ((xpos - 1) * height)] != '.') toReturn = false;
+                if (shape[(size * i)+j] == 'O') {
+                    if (xpos + (((size * i)+j)%5) <= 0 + 1) toReturn = false; 
+                }
+            }
+            
+        }
+    }
+    return toReturn;
+}
+
+bool drop_check(const char* grid, const int width, const int height, const char shape[], const int size, const int xpos, const int ypos) {
+    bool toReturn = true;
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+            if ((ypos + (height * j) + i + ((xpos + 1) * height)) < (width*height) && (ypos + (height * j) + i + ((xpos + 1) * height)) > 1 && (ypos + (height * j) + i + (xpos * height) < width*height && ypos + (height * j) + i + (xpos * height) > 0)){ // Very readable code ahead
+                if (grid[ypos + (height * j) + i + ((xpos + 1)  * height)] == 'O' && grid[ypos + (height * j) + i + ((xpos)*height)] == 'O' && shape[(size * i) + j] == 'O' && shape[(size * i) + j+1] != 'O') {
+                    toReturn = false;
+                }
+                if (shape[(size * i)+j] == 'O') {
+                    if (xpos + (((size * (i))+j+1)%5) >= width - 1) toReturn = 0; 
+                }
             }
         }
     }
@@ -236,7 +258,8 @@ bool collision_check(const char* grid, const int width, const int height, const 
 void render_shape(char* grid, const int width, const int height, const char shape[], const int size, const int xpos, const int ypos) {
     for (int i = 0; i < size; i++) {
         for (int j = 0; j < size; j++) {
-            grid[ypos + (height * j) + i + (xpos * height)] = shape[(size * i) + j];
+            if (ypos + (height * j) + i + (xpos * height) < width*height && ypos + (height * j) + i + (xpos * height) > 0)
+                grid[ypos + (height * j) + i + (xpos * height)] = shape[(size * i) + j];
         }
     }
 }
@@ -265,42 +288,62 @@ int main()
                              '.', '.', 'O', '.', '.',
                              '.', '.', '.', '.', '.' };
 
+    const char q_shape[] = { '.', '.', '.', '.', '.', // SHAPE "Q"
+                             '.', '.', '.', '.', '.',
+                             '.', '.', 'O', 'O', '.',
+                             '.', '.', 'O', 'O', '.',
+                             '.', '.', '.', '.', '.' };
+
 
     char* grid;
-    grid = new char[WIDTH * HEIGHT];
-    init_grid(grid,WIDTH*HEIGHT, '.');
+    grid = new char[(WIDTH+2) * (HEIGHT+1)];
     struct {
         int xpos;
         int ypos;
     } shape;
 
     shape.xpos = 4;
-    shape.ypos = 7;
+    shape.ypos = 3;
 
     std::vector<int> filled;
-    /*filled.push_back(11); filled.push_back(1);
-    filled.push_back(11); filled.push_back(2);
-    filled.push_back(11); filled.push_back(3);
-    filled.push_back(10); filled.push_back(2);*/
+    filled.push_back(8); filled.push_back(1);
+    filled.push_back(8); filled.push_back(2);
+    filled.push_back(9); filled.push_back(3);
+    filled.push_back(9); filled.push_back(2);
+    filled.push_back(8); filled.push_back(8);
+    filled.push_back(8); filled.push_back(9);
+    filled.push_back(9); filled.push_back(10);
+    filled.push_back(9); filled.push_back(9);
+    char* realshape;
+    realshape = new char[25];
+    memcpy(realshape, i_shape, sizeof(q_shape));
 
     while (true) {
-        init_grid(grid, WIDTH* HEIGHT, '.');
-        render_shape(grid, WIDTH, HEIGHT, i_shape, 5, shape.xpos, shape.ypos);
-        /*for (int i = 0; i < (filled.size() / 2); i++) {
-            fill_grid(grid, WIDTH, HEIGHT, filled.at(2 * i + 1), filled.at(2 * i + 0), 'O');
-        }*/
+        init_grid(grid, (WIDTH+2) * (HEIGHT+1), '.');
+        render_shape(grid, (WIDTH+2), (HEIGHT+1), realshape, 5, shape.xpos, shape.ypos);
+        for (int i = 0; i < (filled.size() / 2); i++) {
+            fill_grid(grid, (WIDTH+2), (HEIGHT+1), filled.at(2 * i + 1), filled.at(2 * i + 0), 'O');
+        }
         //system("cls");
-        print_grid(grid, WIDTH, HEIGHT);
+        print_grid(grid, (WIDTH+2), (HEIGHT+1));
         char mv = key_press();
         if (mv == 'd') {
-            if (collision_check(grid, WIDTH, HEIGHT, i_shape, 5, shape.xpos, shape.ypos, true))
+            if (collision_check(grid, (WIDTH+2), (HEIGHT+1), realshape, 5, shape.xpos, shape.ypos, true))
                 shape.xpos += 1;
         }
         if (mv == 'a') {
-            if (collision_check(grid, WIDTH, HEIGHT, i_shape, 5, shape.xpos, shape.ypos, false))
+            if (collision_check(grid, (WIDTH+2), (HEIGHT+1), realshape, 5, shape.xpos, shape.ypos, false))
                 shape.xpos -= 1;
+        }
+        if (mv == 's') {
+            if (drop_check(grid, (WIDTH+2), HEIGHT+1, realshape, 5, shape.xpos, shape.ypos))
+                shape.ypos += 1;
+        }
+        if (mv == 'w') {
+            shape.ypos -= 1;
         }
     }
 
     delete[] grid;
+    delete[] realshape;
 }
