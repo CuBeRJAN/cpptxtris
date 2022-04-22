@@ -3,13 +3,58 @@
 #include <vector>
 #include <cmath>
 #include<future>
+#include <cstdlib> 
+#include <ctime> 
+#include <algorithm>
 
 using std::string;
 using std::cout;
 using std::cin;
 
-#define WIDTH 90 // 10
-#define HEIGHT 26 // 12
+#define WIDTH 10 // 10
+#define HEIGHT 12 // 12
+
+
+// shapes must be square and 5x5
+// shape will be rotated around central piece
+const char i_shape[] = { '.', '.', 'O', '.', '.', // SHAPE "I"
+                         '.', '.', 'O', '.', '.',
+                         '.', '.', 'O', '.', '.',
+                         '.', '.', 'O', '.', '.',
+                         '.', '.', '.', '.', '.' };
+
+const char s_shape[] = { '.', '.', '.', '.', '.', // SHAPE "S"
+                         '.', '.', '.', 'O', '.',
+                         '.', '.', 'O', 'O', '.',
+                         '.', '.', 'O', '.', '.',
+                         '.', '.', '.', '.', '.' };
+const char z_shape[] = { '.', '.', '.', '.', '.', // SHAPE "Z"
+                         '.', 'O', '.', '.', '.',
+                         '.', 'O', 'O', '.', '.',
+                         '.', '.', 'O', '.', '.',
+                         '.', '.', '.', '.', '.' };
+const char q_shape[] = { '.', '.', '.', '.', '.', // SHAPE "Q"
+                         '.', '.', '.', '.', '.',
+                         '.', '.', 'O', 'O', '.',
+                         '.', '.', 'O', 'O', '.',
+                         '.', '.', '.', '.', '.' };
+const char l_shape[] = { '.', '.', '.', '.', '.', // SHAPE "L"
+                         '.', '.', 'O', '.', '.',
+                         '.', '.', 'O', '.', '.',
+                         '.', '.', 'O', 'O', '.',
+                         '.', '.', '.', '.', '.' };
+const char rl_shape[] = { '.', '.', '.', '.', '.', // SHAPE "L (reverse)"
+                          '.', '.', 'O', '.', '.',
+                          '.', '.', 'O', '.', '.',
+                          '.', 'O', 'O', '.', '.',
+                          '.', '.', '.', '.', '.' };
+const char t_shape[] = { '.', '.', '.', '.', '.', // SHAPE "T"
+                         '.', '.', 'O', '.', '.',
+                         '.', 'O', 'O', 'O', '.',
+                         '.', '.', '.', '.', '.',
+                         '.', '.', '.', '.', '.' };
+
+
 
 #if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
@@ -194,7 +239,7 @@ void print_grid(const char* grid, const int width, const int height) {
     }
     cstr += "\n";
     //cout << grid[width * height];
-    for (int i = 0; i < height - 1; i++) {
+    for (int i = 5; i < height - 1; i++) {
         for (int j = 1; j < width - 1; j++) {
             if (j == 1) cstr += border;
             cstr += grid[(height * j) + i];
@@ -208,10 +253,6 @@ void print_grid(const char* grid, const int width, const int height) {
     cout << cstr;
 }
 
-void fill_grid(char* grid, const int width, const int height, const int xpos, const int ypos, char fill) {
-    grid[((xpos)*height) + (ypos - 1)] = fill;
-}
-
 bool collision_check(const char* grid, const int width, const int height, const char shape[], const int size, const int xpos, const int ypos, const bool toRight) {
     bool toReturn = true;
     for (int i = 0; i < size; i++) {
@@ -221,7 +262,7 @@ bool collision_check(const char* grid, const int width, const int height, const 
                     toReturn = false;
                 }
                 if (shape[(size * i) + j] == 'O') {
-                    if (xpos + (((size * (i)) + j + 1) % 5) >= width - 1) toReturn = 0;
+                    if (xpos + (((size * (i)) + j + 1) % 5) >= width - 1) toReturn = false;
                 }
             }
             if (!toRight && (ypos + (height * j) + i + ((xpos - 1) * height)) < (width * height) && (ypos + (height * j) + i + ((xpos - 1) * height)) > 1 && (ypos + (height * j) + i + (xpos * height) < width * height && ypos + (height * j) + i + (xpos * height) > 0)) {
@@ -238,16 +279,16 @@ bool collision_check(const char* grid, const int width, const int height, const 
     return toReturn;
 }
 
-int drop_check(const char* grid, const int width, const int height, const char shape[], const int size, const int xpos, const int ypos) {
-    int toReturn = 0;
+bool drop_check(const char* grid, const int width, const int height, const char shape[], const int size, const int xpos, const int ypos) {
+    int toReturn = true;
     for (int i = 0; i < size; i++) {
         for (int j = 0; j < size; j++) {
-            if ((ypos - 1 + (height * j) + i + ((xpos) * height)) < (width * height) && (ypos - 1 + (height * j) + i + ((xpos) * height)) > 1 && (ypos + (height * j) + i + (xpos * height) < width * height && ypos + (height * j) + i + (xpos * height) > 0)) {
+            if ((ypos - 1 + (height * j) + i + ((xpos) * height)) < (width * height) && (ypos - 1 + (height * j) + i + ((xpos) * height)) > 1 && (ypos + (height * j) + i + (xpos * height) < (width * height)-1 && ypos + (height * j) + i + (xpos * height) > 0)) {
                 if (grid[ypos + 1 + (height * j) + i + ((xpos) * height)] == 'O' && grid[ypos + (height * j) + i + ((xpos)*height)] == 'O' && shape[(size * i) + j] == 'O' && shape[(size * (i + 1)) + j] != 'O') {
-                    toReturn = 1;
+                    toReturn = false;
                 }
                 if (shape[(size * i) + j] == 'O') {
-                    if ((ypos + (((size * (j - 1)) + i) % 5)) >= height-2) toReturn = 2;
+                    if ((ypos + (((size * (j - 1)) + i) % 5)) >= height-2) toReturn = false;
                 }
             }
         }
@@ -259,9 +300,7 @@ std::vector<int> save_shape(char* grid, const int width, const int height, const
     for (int i = 0; i < size; i++) {
         for (int j = 0; j < size; j++) {
             if (ypos + (height * j) + i + (xpos * height) < width * height && ypos + (height * j) + i + (xpos * height) > 0 && shape[(size * i) + j] == 'O') {
-                grid[ypos + (height * j) + i + (xpos * height)] = shape[(size * i) + j];
-                //cout << i + (xpos * height) << "\n";
-                //cout << (ypos + (height * j)) % width << "\n";
+                filled.push_back(ypos+ (height * j) + i + (xpos * height));
             }
         }
     }
@@ -278,88 +317,160 @@ void render_shape(char* grid, const int width, const int height, const char shap
     }
 }
 
+void rotate(char* shape, const int shape_grid){ // Could be more efficient, but it's just like 25 bytes so it's fine
+    char* new_shape;
+    new_shape = (char*)malloc(25 * sizeof(char));
+    memcpy(new_shape, shape, 25);
+    int diff;
+    char* ptr = new_shape;
+    for (int i = 0; i < shape_grid; i+=1) { // First reverse columns
+        for (int j = 0; j < shape_grid; j++) {
+            diff = (shape_grid - j - 1);
+            new_shape[diff + (i * shape_grid)] = shape[(i * shape_grid) + j];
+        }
+    }
+    memcpy(shape, new_shape, 25);
+    for (int i = 0; i < shape_grid; i+=1) { // Then transpose matrix
+        for (int j = 0; j < shape_grid; j++) {
+            new_shape[i + (j * shape_grid)] = shape[(i * shape_grid) + j];
+        }
+    }
+    memcpy(shape, new_shape, 25);
+    free(new_shape);
+}
+
+int newpos(const char* shape, const int shape_size) {
+    int defy = 0;
+    bool found;
+    for (int i = ((shape_size-1)/2); i < shape_size; i++){
+        found = false;
+        for (int j = 0; j < shape_size; j++) {
+            if (shape[(i * shape_size) + j] == 'O') found = true;
+        }
+        if (found) defy++;
+    }
+    return defy;
+}
+
+std::vector<int> row_clear(char* grid, const int width, const int height, std::vector<int> filled) {
+    bool toClear;
+    int arr[width];
+    int index = 0;
+    std::vector<int> rows;
+    for (int i = 5; i < height+5+1; i++) {
+        toClear = true;
+        for (int j = 1; j < width - 1; j++) {
+            if (grid[(height * j) + i] != 'O') toClear = false;
+            arr[j] = (height * j) + i;
+        }
+        if (toClear) {
+            for (int j = 0; j < width-1; j++) {
+                filled.erase(std::remove(filled.begin(), filled.end(), (int)arr[j]), filled.end());
+            }
+            for (int j = 0; j < filled.size(); j++) {
+                if (filled.at(j) % (height) < i)
+                    filled.at(j) += 1;
+            }
+        }
+    }
+    return filled;
+}
+
+std::vector<int> getshape(char* grid, const int width, const int height, int* xpos, int* ypos, char* realshape, std::vector<int> rfilled, const int middle) {
+    rfilled = save_shape(grid, (width), (height), realshape, 5, *xpos, *ypos, rfilled);
+                        if (0 + (rand() % static_cast<int>(6 - 0 + 1)) == 0)
+                            memcpy(realshape, s_shape, 25);
+                        else if (0 + (rand() % static_cast<int>(6 - 0 + 1)) == 1)
+                            memcpy(realshape, z_shape, 25);
+                        else if (0 + (rand() % static_cast<int>(6 - 0 + 1)) == 2)
+                            memcpy(realshape, i_shape, 25);
+                        else if (0 + (rand() % static_cast<int>(6 - 0 + 1)) == 3)
+                            memcpy(realshape, t_shape, 25);
+                        else if (0 + (rand() % static_cast<int>(6 - 0 + 1)) == 4)
+                            memcpy(realshape, l_shape, 25);
+                        else if (0 + (rand() % static_cast<int>(6 - 0 + 1)) == 5)
+                            memcpy(realshape, rl_shape, 25);
+                        else if (0 + (rand() % static_cast<int>(6 - 0 + 1)) == 6)
+                            memcpy(realshape, q_shape, 25);
+
+                        *xpos = middle;
+                        *ypos = newpos(realshape, 5);
+    rfilled = row_clear(grid, width, height, rfilled);
+    return rfilled;
+}
+
+void prerun(char* grid, const int width, const int height, int* xpos, int* ypos, char* realshape, std::vector<int> rfilled) {
+    init_grid(grid, (WIDTH + 2) * (HEIGHT + 1 + 5), '.');
+        render_shape(grid, (WIDTH + 2), (HEIGHT + 1 + 5), realshape, 5, *xpos, *ypos);
+        for (int i = 0; i < (rfilled.size()); i++) {
+            grid[rfilled.at(i)] = 'O';
+        }
+        //system("cls");
+        print_grid(grid, (WIDTH + 2), (HEIGHT + 1 + 5));
+}
+
 int main()
 {
-    //int key = key_press();
-
-    // shapes must be square and 5x5
-    // shape will be rotated around central piece
-    const char i_shape[] = { '.', '.', 'O', '.', '.', // SHAPE "I"
-                             '.', '.', 'O', '.', '.',
-                             '.', '.', 'O', '.', '.',
-                             '.', '.', 'O', '.', '.',
-                             '.', '.', '.', '.', '.' };
-
-    const char s_shape[] = { '.', '.', '.', '.', '.', // SHAPE "S"
-                             '.', '.', '.', 'O', '.',
-                             '.', '.', 'O', 'O', '.',
-                             '.', '.', 'O', '.', '.',
-                             '.', '.', '.', '.', '.' };
-
-    const char z_shape[] = { '.', '.', '.', '.', '.', // SHAPE "Z"
-                             '.', 'O', '.', '.', '.',
-                             '.', 'O', 'O', '.', '.',
-                             '.', '.', 'O', '.', '.',
-                             '.', '.', '.', '.', '.' };
-
-    const char q_shape[] = { '.', '.', '.', '.', '.', // SHAPE "Q"
-                             '.', '.', '.', '.', '.',
-                             '.', '.', 'O', 'O', '.',
-                             '.', '.', 'O', 'O', '.',
-                             '.', '.', '.', '.', '.' };
-
-
+    srand((unsigned)time(0)); 
     char* grid;
-    grid = new char[(WIDTH + 2) * (HEIGHT + 1)];
+    grid = new char[(WIDTH + 2) * (HEIGHT + 1 + 5)];
     struct {
         int xpos;
         int ypos;
     } shape;
 
-    shape.xpos = 4;
-    shape.ypos = 3;
+    int* nxpos = &shape.xpos;
+    int* nypos = &shape.ypos;
 
-    std::vector<int> filled;
-    filled.push_back(8); filled.push_back(1);
-    filled.push_back(8); filled.push_back(2);
-    filled.push_back(9); filled.push_back(3);
-    filled.push_back(9); filled.push_back(2);
-    filled.push_back(8); filled.push_back(8);
-    filled.push_back(8); filled.push_back(9);
-    filled.push_back(9); filled.push_back(10);
-    filled.push_back(9); filled.push_back(9);
+    const int middle = ((((int)WIDTH-2)-1) / 2);
+    std::vector<int> rfilled;
     char* realshape;
-    realshape = new char[25];
-    memcpy(realshape, s_shape, 25);
-
+    realshape = (char*)malloc(25);
+    shape.xpos = middle;
+    shape.ypos = newpos(realshape, 5);
+    memcpy(realshape, i_shape, 25);
+    //getshape(grid, WIDTH+2, HEIGHT + 1 + 5, nxpos, nypos, realshape, rfilled, middle);
     while (true) {
-        init_grid(grid, (WIDTH + 2) * (HEIGHT + 1), '.');
-        render_shape(grid, (WIDTH + 2), (HEIGHT + 1), realshape, 5, shape.xpos, shape.ypos);
-        for (int i = 0; i < (filled.size() / 2); i++) {
-            fill_grid(grid, (WIDTH + 2), (HEIGHT + 1), filled.at(2 * i + 1), filled.at(2 * i + 0), 'O');
-        }
-        //system("cls");
-        print_grid(grid, (WIDTH + 2), (HEIGHT + 1));
+        prerun(grid, WIDTH + 2, HEIGHT + 1 + 5, nxpos, nypos, realshape, rfilled);
         char mv = key_press();
+
+
+
+        // Actions
         if (mv == 'd') {
-            if (collision_check(grid, (WIDTH + 2), (HEIGHT + 1), realshape, 5, shape.xpos, shape.ypos, true))
+            if (collision_check(grid, (WIDTH + 2), (HEIGHT + 1 + 5), realshape, 5, shape.xpos, shape.ypos, true))
                 shape.xpos += 1;
         }
         if (mv == 'a') {
-            if (collision_check(grid, (WIDTH + 2), (HEIGHT + 1), realshape, 5, shape.xpos, shape.ypos, false))
+            if (collision_check(grid, (WIDTH + 2), (HEIGHT + 1 + 5), realshape, 5, shape.xpos, shape.ypos, false))
                 shape.xpos -= 1;
         }
-        if (mv == 's') {
-            if (drop_check(grid, (WIDTH + 2), HEIGHT + 1, realshape, 5, shape.xpos, shape.ypos) == 0)
+        if (mv == 's' || mv == 'f') {
+            if (mv == 's' && drop_check(grid, (WIDTH + 2), HEIGHT + 1 + 5, realshape, 5, shape.xpos, shape.ypos))
                 shape.ypos += 1;
-            else if (drop_check(grid, (WIDTH + 2), HEIGHT + 1, realshape, 5, shape.xpos, shape.ypos) == 2)
-                filled = save_shape(grid, (WIDTH + 2), (HEIGHT + 1), realshape, 5, shape.xpos, shape.ypos, filled);
+            else if(mv == 'f') {
+                while (true) {
+                    if (drop_check(grid, (WIDTH + 2), HEIGHT + 1 + 5, realshape, 5, shape.xpos, shape.ypos)) {
+                        shape.ypos += 1;
+                        prerun(grid, WIDTH + 2, HEIGHT + 1 + 5, nxpos, nypos, realshape, rfilled);
+                    }
+                    else {
+                        rfilled = getshape(grid, WIDTH+2, HEIGHT + 1 + 5, nxpos, nypos, realshape, rfilled, middle);
+                        break;
+                    }
+                }
+            }
+            else {
+                rfilled = getshape(grid, WIDTH+2, HEIGHT + 1 + 5, nxpos, nypos, realshape, rfilled, middle);
+            }
         }
         if (mv == 'w') {
-            shape.ypos -= 1;
+            rotate(realshape,5);
         }
     }
 
     delete[] grid;
     delete[] realshape;
+    delete nypos;
+    delete nxpos;
 }
