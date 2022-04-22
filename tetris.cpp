@@ -357,7 +357,7 @@ std::vector<int> row_clear(char* grid, const int width, const int height, std::v
     int arr[width];
     int index = 0;
     std::vector<int> rows;
-    for (int i = 5; i < height+5+1; i++) {
+    for (int i = 5; i < height+5+2; i++) {
         toClear = true;
         for (int j = 1; j < width - 1; j++) {
             if (grid[(height * j) + i] != 'O') toClear = false;
