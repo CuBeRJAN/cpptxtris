@@ -369,7 +369,7 @@ std::vector<int> row_clear(char* grid, const int width, const int height, std::v
                 filled.erase(std::remove(filled.begin(), filled.end(), (int)arr[j]), filled.end());
             }
             for (int j = 0; j < filled.size(); j++) {
-                if (filled.at(j) % (height+1) < i)
+                if (filled.at(j) % (height-1+SHAPESIZE) < i)
                     filled.at(j) += 1;
             }
         }
@@ -445,9 +445,10 @@ int main()
     else if (0 + (rand() % static_cast<int>(6 - 0 + 1)) == 6)
         memcpy(realshape, q_shape, QSHAPESIZE);
     getshape(grid, WIDTH+2, HEIGHT + 1 + SHAPESIZE, nxpos, nypos, realshape, rfilled, middle);
+    char mv;
     while (true) {
         prerun(grid, WIDTH + 2, HEIGHT + 1 + SHAPESIZE, nxpos, nypos, realshape, rfilled);
-        char mv = key_press();
+        mv = key_press();
 
 
 
