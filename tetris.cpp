@@ -238,23 +238,36 @@ bool collision_check(const char* grid, const int width, const int height, const 
     return toReturn;
 }
 
-bool drop_check(const char* grid, const int width, const int height, const char shape[], const int size, const int xpos, const int ypos) {
-    bool toReturn = true;
+int drop_check(const char* grid, const int width, const int height, const char shape[], const int size, const int xpos, const int ypos) {
+    int toReturn = 0;
     for (int i = 0; i < size; i++) {
         for (int j = 0; j < size; j++) {
             if ((ypos - 1 + (height * j) + i + ((xpos) * height)) < (width * height) && (ypos - 1 + (height * j) + i + ((xpos) * height)) > 1 && (ypos + (height * j) + i + (xpos * height) < width * height && ypos + (height * j) + i + (xpos * height) > 0)) {
                 if (grid[ypos + 1 + (height * j) + i + ((xpos) * height)] == 'O' && grid[ypos + (height * j) + i + ((xpos)*height)] == 'O' && shape[(size * i) + j] == 'O' && shape[(size * (i + 1)) + j] != 'O') {
-                    toReturn = false;
+                    toReturn = 1;
                 }
                 if (shape[(size * i) + j] == 'O') {
-                    cout << (ypos + (((size * (j - 1)) + i) % 5)) << "\n";
-                    if ((ypos + (((size * (j - 1)) + i) % 5)) >= height-2) toReturn = 0;
+                    if ((ypos + (((size * (j - 1)) + i) % 5)) >= height-2) toReturn = 2;
                 }
             }
         }
     }
     return toReturn;
 }
+
+std::vector<int> save_shape(char* grid, const int width, const int height, const char shape[], const int size, const int xpos, const int ypos, std::vector<int> filled) {
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+            if (ypos + (height * j) + i + (xpos * height) < width * height && ypos + (height * j) + i + (xpos * height) > 0 && shape[(size * i) + j] == 'O') {
+                grid[ypos + (height * j) + i + (xpos * height)] = shape[(size * i) + j];
+                //cout << i + (xpos * height) << "\n";
+                //cout << (ypos + (height * j)) % width << "\n";
+            }
+        }
+    }
+    return filled;
+}
+
 
 void render_shape(char* grid, const int width, const int height, const char shape[], const int size, const int xpos, const int ypos) {
     for (int i = 0; i < size; i++) {
@@ -337,8 +350,10 @@ int main()
                 shape.xpos -= 1;
         }
         if (mv == 's') {
-            if (drop_check(grid, (WIDTH + 2), HEIGHT + 1, realshape, 5, shape.xpos, shape.ypos))
+            if (drop_check(grid, (WIDTH + 2), HEIGHT + 1, realshape, 5, shape.xpos, shape.ypos) == 0)
                 shape.ypos += 1;
+            else if (drop_check(grid, (WIDTH + 2), HEIGHT + 1, realshape, 5, shape.xpos, shape.ypos) == 2)
+                filled = save_shape(grid, (WIDTH + 2), (HEIGHT + 1), realshape, 5, shape.xpos, shape.ypos, filled);
         }
         if (mv == 'w') {
             shape.ypos -= 1;
