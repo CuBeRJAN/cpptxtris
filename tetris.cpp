@@ -13,7 +13,8 @@ using std::cin;
 
 #define WIDTH 10 // 10
 #define HEIGHT 12 // 12
-
+#define SHAPESIZE 5 // 5
+#define QSHAPESIZE 25 // 5*5
 
 // shapes must be square and 5x5
 // shape will be rotated around central piece
@@ -239,7 +240,7 @@ void print_grid(const char* grid, const int width, const int height) {
     }
     cstr += "\n";
     //cout << grid[width * height];
-    for (int i = 5; i < height - 1; i++) {
+    for (int i = SHAPESIZE; i < height - 1; i++) {
         for (int j = 1; j < width - 1; j++) {
             if (j == 1) cstr += border;
             cstr += grid[(height * j) + i];
@@ -262,7 +263,7 @@ bool collision_check(const char* grid, const int width, const int height, const 
                     toReturn = false;
                 }
                 if (shape[(size * i) + j] == 'O') {
-                    if (xpos + (((size * (i)) + j + 1) % 5) >= width - 1) toReturn = false;
+                    if (xpos + (((size * (i)) + j + 1) % SHAPESIZE) >= width - 1) toReturn = false;
                 }
             }
             if (!toRight && (ypos + (height * j) + i + ((xpos - 1) * height)) < (width * height) && (ypos + (height * j) + i + ((xpos - 1) * height)) > 1 && (ypos + (height * j) + i + (xpos * height) < width * height && ypos + (height * j) + i + (xpos * height) > 0)) {
@@ -270,7 +271,7 @@ bool collision_check(const char* grid, const int width, const int height, const 
                     toReturn = false;
                 }
                 if (shape[(size * i) + j] == 'O') {
-                    if (xpos + (((size * i) + j) % 5) <= 0 + 1) toReturn = false;
+                    if (xpos + (((size * i) + j) % SHAPESIZE) <= 0 + 1) toReturn = false;
                 }
             }
 
@@ -288,7 +289,7 @@ bool drop_check(const char* grid, const int width, const int height, const char 
                     toReturn = false;
                 }
                 if (shape[(size * i) + j] == 'O') {
-                    if ((ypos + (((size * (j - 1)) + i) % 5)) >= height-2) toReturn = false;
+                    if ((ypos + (((size * (j - 1)) + i) % SHAPESIZE)) >= height-2) toReturn = false;
                 }
             }
         }
@@ -319,8 +320,8 @@ void render_shape(char* grid, const int width, const int height, const char shap
 
 void rotate(char* shape, const int shape_grid){ // Could be more efficient, but it's just like 25 bytes so it's fine
     char* new_shape;
-    new_shape = (char*)malloc(25 * sizeof(char));
-    memcpy(new_shape, shape, 25);
+    new_shape = (char*)malloc(QSHAPESIZE * sizeof(char));
+    memcpy(new_shape, shape, QSHAPESIZE);
     int diff;
     char* ptr = new_shape;
     for (int i = 0; i < shape_grid; i+=1) { // First reverse columns
@@ -329,13 +330,13 @@ void rotate(char* shape, const int shape_grid){ // Could be more efficient, but 
             new_shape[diff + (i * shape_grid)] = shape[(i * shape_grid) + j];
         }
     }
-    memcpy(shape, new_shape, 25);
+    memcpy(shape, new_shape, QSHAPESIZE);
     for (int i = 0; i < shape_grid; i+=1) { // Then transpose matrix
         for (int j = 0; j < shape_grid; j++) {
             new_shape[i + (j * shape_grid)] = shape[(i * shape_grid) + j];
         }
     }
-    memcpy(shape, new_shape, 25);
+    memcpy(shape, new_shape, QSHAPESIZE);
     free(new_shape);
 }
 
@@ -357,7 +358,7 @@ std::vector<int> row_clear(char* grid, const int width, const int height, std::v
     int arr[width];
     int index = 0;
     std::vector<int> rows;
-    for (int i = 5; i < height+5+2; i++) {
+    for (int i = SHAPESIZE; i < height+SHAPESIZE+2; i++) {
         toClear = true;
         for (int j = 1; j < width - 1; j++) {
             if (grid[(height * j) + i] != 'O') toClear = false;
@@ -368,7 +369,7 @@ std::vector<int> row_clear(char* grid, const int width, const int height, std::v
                 filled.erase(std::remove(filled.begin(), filled.end(), (int)arr[j]), filled.end());
             }
             for (int j = 0; j < filled.size(); j++) {
-                if (filled.at(j) % (height) < i)
+                if (filled.at(j) % (height+1) < i)
                     filled.at(j) += 1;
             }
         }
@@ -377,43 +378,43 @@ std::vector<int> row_clear(char* grid, const int width, const int height, std::v
 }
 
 std::vector<int> getshape(char* grid, const int width, const int height, int* xpos, int* ypos, char* realshape, std::vector<int> rfilled, const int middle) {
-    rfilled = save_shape(grid, (width), (height), realshape, 5, *xpos, *ypos, rfilled);
+    rfilled = save_shape(grid, (width), (height), realshape, SHAPESIZE, *xpos, *ypos, rfilled);
                         if (0 + (rand() % static_cast<int>(6 - 0 + 1)) == 0)
-                            memcpy(realshape, s_shape, 25);
+                            memcpy(realshape, s_shape, QSHAPESIZE);
                         else if (0 + (rand() % static_cast<int>(6 - 0 + 1)) == 1)
-                            memcpy(realshape, z_shape, 25);
+                            memcpy(realshape, z_shape, QSHAPESIZE);
                         else if (0 + (rand() % static_cast<int>(6 - 0 + 1)) == 2)
-                            memcpy(realshape, i_shape, 25);
+                            memcpy(realshape, i_shape, QSHAPESIZE);
                         else if (0 + (rand() % static_cast<int>(6 - 0 + 1)) == 3)
-                            memcpy(realshape, t_shape, 25);
+                            memcpy(realshape, t_shape, QSHAPESIZE);
                         else if (0 + (rand() % static_cast<int>(6 - 0 + 1)) == 4)
-                            memcpy(realshape, l_shape, 25);
+                            memcpy(realshape, l_shape, QSHAPESIZE);
                         else if (0 + (rand() % static_cast<int>(6 - 0 + 1)) == 5)
-                            memcpy(realshape, rl_shape, 25);
+                            memcpy(realshape, rl_shape, QSHAPESIZE);
                         else if (0 + (rand() % static_cast<int>(6 - 0 + 1)) == 6)
-                            memcpy(realshape, q_shape, 25);
+                            memcpy(realshape, q_shape, QSHAPESIZE);
 
                         *xpos = middle;
-                        *ypos = newpos(realshape, 5);
+                        *ypos = newpos(realshape, SHAPESIZE);
     rfilled = row_clear(grid, width, height, rfilled);
     return rfilled;
 }
 
 void prerun(char* grid, const int width, const int height, int* xpos, int* ypos, char* realshape, std::vector<int> rfilled) {
-    init_grid(grid, (WIDTH + 2) * (HEIGHT + 1 + 5), '.');
-        render_shape(grid, (WIDTH + 2), (HEIGHT + 1 + 5), realshape, 5, *xpos, *ypos);
+    init_grid(grid, (WIDTH + 2) * (HEIGHT + 1 + SHAPESIZE), '.');
+        render_shape(grid, (WIDTH + 2), (HEIGHT + 1 + SHAPESIZE), realshape, SHAPESIZE, *xpos, *ypos);
         for (int i = 0; i < (rfilled.size()); i++) {
             grid[rfilled.at(i)] = 'O';
         }
         //system("cls");
-        print_grid(grid, (WIDTH + 2), (HEIGHT + 1 + 5));
+        print_grid(grid, (WIDTH + 2), (HEIGHT + 1 + SHAPESIZE));
 }
 
 int main()
 {
     srand((unsigned)time(0)); 
     char* grid;
-    grid = new char[(WIDTH + 2) * (HEIGHT + 1 + 5)];
+    grid = new char[(WIDTH + 2) * (HEIGHT + 1 + SHAPESIZE)];
     struct {
         int xpos;
         int ypos;
@@ -425,47 +426,61 @@ int main()
     const int middle = ((((int)WIDTH-2)-1) / 2);
     std::vector<int> rfilled;
     char* realshape;
-    realshape = (char*)malloc(25);
+    realshape = (char*)malloc(QSHAPESIZE);
     shape.xpos = middle;
-    shape.ypos = newpos(realshape, 5);
-    memcpy(realshape, i_shape, 25);
-    //getshape(grid, WIDTH+2, HEIGHT + 1 + 5, nxpos, nypos, realshape, rfilled, middle);
+    //shape.ypos = newpos(realshape, SHAPESIZE);
+    //memcpy(realshape, i_shape, QSHAPESIZE);
+    if (0 + (rand() % static_cast<int>(6 - 0 + 1)) == 0)
+        memcpy(realshape, s_shape, QSHAPESIZE);
+    else if (0 + (rand() % static_cast<int>(6 - 0 + 1)) == 1)
+        memcpy(realshape, z_shape, QSHAPESIZE);
+    else if (0 + (rand() % static_cast<int>(6 - 0 + 1)) == 2)
+        memcpy(realshape, i_shape, QSHAPESIZE);
+    else if (0 + (rand() % static_cast<int>(6 - 0 + 1)) == 3)
+        memcpy(realshape, t_shape, QSHAPESIZE);
+    else if (0 + (rand() % static_cast<int>(6 - 0 + 1)) == 4)
+        memcpy(realshape, l_shape, QSHAPESIZE);
+    else if (0 + (rand() % static_cast<int>(6 - 0 + 1)) == 5)
+        memcpy(realshape, rl_shape, QSHAPESIZE);
+    else if (0 + (rand() % static_cast<int>(6 - 0 + 1)) == 6)
+        memcpy(realshape, q_shape, QSHAPESIZE);
+    getshape(grid, WIDTH+2, HEIGHT + 1 + SHAPESIZE, nxpos, nypos, realshape, rfilled, middle);
     while (true) {
-        prerun(grid, WIDTH + 2, HEIGHT + 1 + 5, nxpos, nypos, realshape, rfilled);
+        prerun(grid, WIDTH + 2, HEIGHT + 1 + SHAPESIZE, nxpos, nypos, realshape, rfilled);
         char mv = key_press();
 
 
 
         // Actions
         if (mv == 'd') {
-            if (collision_check(grid, (WIDTH + 2), (HEIGHT + 1 + 5), realshape, 5, shape.xpos, shape.ypos, true))
+            if (collision_check(grid, (WIDTH + 2), (HEIGHT + 1 + SHAPESIZE), realshape, SHAPESIZE, shape.xpos, shape.ypos, true))
                 shape.xpos += 1;
         }
         if (mv == 'a') {
-            if (collision_check(grid, (WIDTH + 2), (HEIGHT + 1 + 5), realshape, 5, shape.xpos, shape.ypos, false))
+            if (collision_check(grid, (WIDTH + 2), (HEIGHT + 1 + SHAPESIZE), realshape, SHAPESIZE, shape.xpos, shape.ypos, false))
                 shape.xpos -= 1;
         }
         if (mv == 's' || mv == 'f') {
-            if (mv == 's' && drop_check(grid, (WIDTH + 2), HEIGHT + 1 + 5, realshape, 5, shape.xpos, shape.ypos))
+            if (mv == 's' && drop_check(grid, (WIDTH + 2), HEIGHT + 1 + SHAPESIZE, realshape, SHAPESIZE, shape.xpos, shape.ypos))
                 shape.ypos += 1;
             else if(mv == 'f') {
                 while (true) {
-                    if (drop_check(grid, (WIDTH + 2), HEIGHT + 1 + 5, realshape, 5, shape.xpos, shape.ypos)) {
+                    if (drop_check(grid, (WIDTH + 2), HEIGHT + 1 + SHAPESIZE, realshape, SHAPESIZE, shape.xpos, shape.ypos)) {
                         shape.ypos += 1;
-                        prerun(grid, WIDTH + 2, HEIGHT + 1 + 5, nxpos, nypos, realshape, rfilled);
+                        prerun(grid, WIDTH + 2, HEIGHT + 1 + SHAPESIZE, nxpos, nypos, realshape, rfilled);
                     }
                     else {
-                        rfilled = getshape(grid, WIDTH+2, HEIGHT + 1 + 5, nxpos, nypos, realshape, rfilled, middle);
+                        rfilled = getshape(grid, WIDTH+2, HEIGHT + 1 + SHAPESIZE, nxpos, nypos, realshape, rfilled, middle);
                         break;
                     }
                 }
             }
             else {
-                rfilled = getshape(grid, WIDTH+2, HEIGHT + 1 + 5, nxpos, nypos, realshape, rfilled, middle);
+                rfilled = getshape(grid, WIDTH+2, HEIGHT + 1 + SHAPESIZE, nxpos, nypos, realshape, rfilled, middle);
             }
         }
         if (mv == 'w') {
-            rotate(realshape,5);
+            rotate(realshape,SHAPESIZE);
         }
     }
 
