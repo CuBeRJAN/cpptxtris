@@ -72,6 +72,10 @@ const char t_shape[] = { '.', '.', '.', '.', '.', // SHAPE "T"
 void scr_clear() {
     system("cls");
 }
+void game_quit() {
+    cout << "Game over!\n";
+    exit(0);
+}
 int key_press(char* mv) { // not working: F11 (-122, toggles fullscreen)
     KEY_EVENT_RECORD keyevent;
     INPUT_RECORD irec;
@@ -135,6 +139,14 @@ int key_press(char* mv) { // not working: F11 (-122, toggles fullscreen)
 #include <unistd.h>
 void scr_clear() {
     system("clear");
+}
+void game_quit() {
+    struct termios term;
+    tcgetattr(0, &term);
+    term.c_lflag |= (ICANON | ECHO);
+    tcsetattr(0, TCSANOW, &term);
+    cout << "Game over!\n";
+    exit(0);
 }
 int key_press(char* mv) { // not working: ¹ (251), num lock (-144), caps lock (-20), windows key (-91), kontext menu key (-93)
     struct termios term;
@@ -376,6 +388,7 @@ std::vector<int> row_clear(char* grid, const int width, const int height, std::v
         toClear = true;
         for (int j = 1; j < width - 1; j++) {
             if (grid[(height * j) + i] != 'O') toClear = false;
+            else if (grid[(height * j) + i] == 'O' && i < SHAPESIZE+2) {game_quit();}
             arr[j] = (height * j) + i;
         }
         if (toClear) {
