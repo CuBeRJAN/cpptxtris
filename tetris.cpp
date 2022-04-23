@@ -13,6 +13,10 @@ using std::string;
 using std::cout;
 using std::cin;
 
+
+// TODO: game end, check collision for rotation, score counter
+
+
 #define WIDTH 10 // 10
 #define HEIGHT 12 // 12
 #define SHAPESIZE 5 // 5
@@ -63,6 +67,9 @@ const char t_shape[] = { '.', '.', '.', '.', '.', // SHAPE "T"
 #define WIN32_LEAN_AND_MEAN
 #define VC_EXTRALEAN
 #include <Windows.h>
+void scr_clear() {
+    system("cls");
+}
 int key_press(char* mv) { // not working: F11 (-122, toggles fullscreen)
     KEY_EVENT_RECORD keyevent;
     INPUT_RECORD irec;
@@ -124,6 +131,9 @@ int key_press(char* mv) { // not working: F11 (-122, toggles fullscreen)
 #include <sys/ioctl.h>
 #include <termios.h>
 #include <unistd.h>
+void scr_clear() {
+    system("clear");
+}
 int key_press(char* mv) { // not working: ¹ (251), num lock (-144), caps lock (-20), windows key (-91), kontext menu key (-93)
     struct termios term;
     tcgetattr(0, &term);
@@ -409,7 +419,7 @@ void prerun(char* grid, const int width, const int height, int* xpos, int* ypos,
         for (int i = 0; i < (rfilled.size()); i++) {
             grid[rfilled.at(i)] = 'O';
         }
-        //system("cls");
+        scr_clear();
 }
 
 int main()
@@ -433,7 +443,6 @@ int main()
     memcpy(realshape, i_shape, QSHAPESIZE);
     getshape(grid, WIDTH+2, HEIGHT + 1 + SHAPESIZE, nxpos, nypos, realshape, rfilled, middle);
     char *mv = new char;
-    //std::thread key_thread (set_mv, mv);
     std::thread key_thread (key_press, std::ref(mv));
     int counter = 0;
     float float_ms=0;
