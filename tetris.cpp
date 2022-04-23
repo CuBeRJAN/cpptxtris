@@ -14,7 +14,7 @@ using std::cout;
 using std::cin;
 
 
-// TODO: game end, check collision for rotation, score counter
+// TODO: game end, check collision for rotation, score counter, game speedup
 
 
 #define WIDTH 10 // 10
