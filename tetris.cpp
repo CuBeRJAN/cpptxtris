@@ -360,18 +360,18 @@ std::vector<int> row_clear(char* grid, const int width, const int height, std::v
     int arr[width];
     int index = 0;
     std::vector<int> rows;
-    for (int i = SHAPESIZE; i < height+SHAPESIZE+2; i++) {
+    for (int i = SHAPESIZE; i < height+SHAPESIZE+1; i++) {
         toClear = true;
         for (int j = 1; j < width - 1; j++) {
             if (grid[(height * j) + i] != 'O') toClear = false;
             arr[j] = (height * j) + i;
         }
         if (toClear) {
-            for (int j = 0; j < width-1; j++) {
+            for (int j = 0; j < width; j++) {
                 filled.erase(std::remove(filled.begin(), filled.end(), (int)arr[j]), filled.end());
             }
             for (int j = 0; j < filled.size(); j++) {
-                if (filled.at(j) % (height+1) < i && i > 0)
+                if (filled.at(j) % (height) < i)
                     filled.at(j) += 1;
             }
         }
@@ -410,14 +410,7 @@ void prerun(char* grid, const int width, const int height, int* xpos, int* ypos,
             grid[rfilled.at(i)] = 'O';
         }
         //system("cls");
-        //print_grid(grid, (WIDTH + 2), (HEIGHT + 1 + SHAPESIZE));
 }
-
-/*void set_mv(char* mv) {
-    while (true)
-        *mv = key_press();
-        cout << *mv;
-}*/
 
 int main()
 {
@@ -437,35 +430,22 @@ int main()
     char* realshape;
     realshape = (char*)malloc(QSHAPESIZE);
     shape.xpos = middle;
-    //shape.ypos = newpos(realshape, SHAPESIZE);
     memcpy(realshape, i_shape, QSHAPESIZE);
-    /*if (0 + (rand() % static_cast<int>(6 - 0 + 1)) == 0)
-        memcpy(realshape, s_shape, QSHAPESIZE);
-    else if (0 + (rand() % static_cast<int>(6 - 0 + 1)) == 1)
-        memcpy(realshape, z_shape, QSHAPESIZE);
-    else if (0 + (rand() % static_cast<int>(6 - 0 + 1)) == 2)
-        memcpy(realshape, i_shape, QSHAPESIZE);
-    else if (0 + (rand() % static_cast<int>(6 - 0 + 1)) == 3)
-        memcpy(realshape, t_shape, QSHAPESIZE);
-    else if (0 + (rand() % static_cast<int>(6 - 0 + 1)) == 4)
-        memcpy(realshape, l_shape, QSHAPESIZE);
-    else if (0 + (rand() % static_cast<int>(6 - 0 + 1)) == 5)
-        memcpy(realshape, rl_shape, QSHAPESIZE);
-    else if (0 + (rand() % static_cast<int>(6 - 0 + 1)) == 6)
-        memcpy(realshape, q_shape, QSHAPESIZE);*/
     getshape(grid, WIDTH+2, HEIGHT + 1 + SHAPESIZE, nxpos, nypos, realshape, rfilled, middle);
     char *mv = new char;
     //std::thread key_thread (set_mv, mv);
     std::thread key_thread (key_press, std::ref(mv));
     int counter = 0;
+    float float_ms=0;
+    const int max_counter = 60;
     while (true) {
         *mv = 0;
-        if (counter > 40)
+        if (counter > max_counter)
             counter = 0;
-        usleep(10000);
+        usleep(10000-float_ms);
         //prerun(grid, WIDTH + 2, HEIGHT + 1 + SHAPESIZE, nxpos, nypos, realshape, rfilled);
         //print_grid(grid, (WIDTH + 2), (HEIGHT + 1 + SHAPESIZE));
-
+        auto start = std::chrono::high_resolution_clock::now();
 
         // Actions
         if (*mv == 'd') {
@@ -473,14 +453,12 @@ int main()
                 shape.xpos += 1;
                 prerun(grid, WIDTH + 2, HEIGHT + 1 + SHAPESIZE, nxpos, nypos, realshape, rfilled);
                 print_grid(grid, (WIDTH + 2), (HEIGHT + 1 + SHAPESIZE));
-                counter += 2;
         }
         else if (*mv == 'a') {
             if (collision_check(grid, (WIDTH + 2), (HEIGHT + 1 + SHAPESIZE), realshape, SHAPESIZE, shape.xpos, shape.ypos, false))
                 shape.xpos -= 1;
                 prerun(grid, WIDTH + 2, HEIGHT + 1 + SHAPESIZE, nxpos, nypos, realshape, rfilled);
                 print_grid(grid, (WIDTH + 2), (HEIGHT + 1 + SHAPESIZE));
-                counter += 2;
         }
         else if (*mv == 's' || *mv == 'f') {
             if (*mv == 's' && drop_check(grid, (WIDTH + 2), HEIGHT + 1 + SHAPESIZE, realshape, SHAPESIZE, shape.xpos, shape.ypos)) {
@@ -490,7 +468,7 @@ int main()
                 while (true) {
                     if (drop_check(grid, (WIDTH + 2), HEIGHT + 1 + SHAPESIZE, realshape, SHAPESIZE, shape.xpos, shape.ypos)) {
                         shape.ypos += 1;
-                        //prerun(grid, WIDTH + 2, HEIGHT + 1 + SHAPESIZE, nxpos, nypos, realshape, rfilled);
+                        prerun(grid, WIDTH + 2, HEIGHT + 1 + SHAPESIZE, nxpos, nypos, realshape, rfilled);
                     }
                     else {
                         rfilled = getshape(grid, WIDTH+2, HEIGHT + 1 + SHAPESIZE, nxpos, nypos, realshape, rfilled, middle);
@@ -503,28 +481,26 @@ int main()
             }
             prerun(grid, WIDTH + 2, HEIGHT + 1 + SHAPESIZE, nxpos, nypos, realshape, rfilled);
             print_grid(grid, (WIDTH + 2), (HEIGHT + 1 + SHAPESIZE));
-            counter += 2;
         }
         else if (*mv == 'w') {
             //print_grid(grid, (WIDTH + 2), (HEIGHT + 1 + SHAPESIZE));
             rotate(realshape,SHAPESIZE);
             prerun(grid, WIDTH + 2, HEIGHT + 1 + SHAPESIZE, nxpos, nypos, realshape, rfilled);
             print_grid(grid, (WIDTH + 2), (HEIGHT + 1 + SHAPESIZE));
-            counter += 2;
         }
         
-        else if (counter == 40 && drop_check(grid, (WIDTH + 2), HEIGHT + 1 + SHAPESIZE, realshape, SHAPESIZE, shape.xpos, shape.ypos)) {
+        else if (counter == max_counter && drop_check(grid, (WIDTH + 2), HEIGHT + 1 + SHAPESIZE, realshape, SHAPESIZE, shape.xpos, shape.ypos)) {
             shape.ypos += 1;
             prerun(grid, WIDTH + 2, HEIGHT + 1 + SHAPESIZE, nxpos, nypos, realshape, rfilled);
             print_grid(grid, (WIDTH + 2), (HEIGHT + 1 + SHAPESIZE));
-            counter += 2;
         }
-        else if (counter == 40) {
+        else if (counter == max_counter) {
             rfilled = getshape(grid, WIDTH+2, HEIGHT + 1 + SHAPESIZE, nxpos, nypos, realshape, rfilled, middle);
             prerun(grid, WIDTH + 2, HEIGHT + 1 + SHAPESIZE, nxpos, nypos, realshape, rfilled);
             print_grid(grid, (WIDTH + 2), (HEIGHT + 1 + SHAPESIZE));
-            counter += 2;
         }
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<float, std::milli> float_ms = end - start;
         counter += 1;
     }
 
