@@ -388,7 +388,7 @@ std::vector<int> row_clear(char* grid, const int width, const int height, std::v
         toClear = true;
         for (int j = 1; j < width - 1; j++) {
             if (grid[(height * j) + i] != 'O') toClear = false;
-            else if (grid[(height * j) + i] == 'O' && i < SHAPESIZE) {game_quit();}
+            else if (grid[(height * j) + i] == 'O' && i < SHAPESIZE-1) {game_quit();}
             arr[j] = (height * j) + i;
         }
         if (toClear) {
