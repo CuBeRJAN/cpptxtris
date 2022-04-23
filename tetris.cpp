@@ -5,6 +5,8 @@
 #include<future>
 #include <cstdlib> 
 #include <ctime> 
+#include <thread> 
+#include<chrono>
 #include <algorithm>
 
 using std::string;
@@ -61,7 +63,7 @@ const char t_shape[] = { '.', '.', '.', '.', '.', // SHAPE "T"
 #define WIN32_LEAN_AND_MEAN
 #define VC_EXTRALEAN
 #include <Windows.h>
-int key_press() { // not working: F11 (-122, toggles fullscreen)
+int key_press(char* mv) { // not working: F11 (-122, toggles fullscreen)
     KEY_EVENT_RECORD keyevent;
     INPUT_RECORD irec;
     DWORD events;
@@ -113,7 +115,7 @@ int key_press() { // not working: F11 (-122, toggles fullscreen)
             case   24: continue; // disable Ctrl + x
             case   25: continue; // disable Ctrl + y
             case   26: continue; // disable Ctrl + z
-            default: return key; // any other ASCII/virtual character
+            default: *mv = (char)key; // any other ASCII/virtual character
             }
         }
     }
@@ -122,7 +124,7 @@ int key_press() { // not working: F11 (-122, toggles fullscreen)
 #include <sys/ioctl.h>
 #include <termios.h>
 #include <unistd.h>
-int key_press() { // not working: ¹ (251), num lock (-144), caps lock (-20), windows key (-91), kontext menu key (-93)
+int key_press(char* mv) { // not working: ¹ (251), num lock (-144), caps lock (-20), windows key (-91), kontext menu key (-93)
     struct termios term;
     tcgetattr(0, &term);
     while (true) {
@@ -219,7 +221,7 @@ int key_press() { // not working: ¹ (251), num lock (-144), caps lock (-20), wi
         case   24: continue; // disable Ctrl + x
         case   25: continue; // disable Ctrl + y
         case   26: continue; // disable Ctrl + z (terminates program)
-        default: return key; // any other ASCII character
+        default: *mv = (char)key; // any other ASCII character
         }
     }
 }
@@ -251,7 +253,7 @@ void print_grid(const char* grid, const int width, const int height) {
     for (int i = 0; i < width; i++) {
         cstr += border;
     }
-    cout << cstr;
+    cout << cstr << "\n";
 }
 
 bool collision_check(const char* grid, const int width, const int height, const char shape[], const int size, const int xpos, const int ypos, const bool toRight) {
@@ -369,7 +371,7 @@ std::vector<int> row_clear(char* grid, const int width, const int height, std::v
                 filled.erase(std::remove(filled.begin(), filled.end(), (int)arr[j]), filled.end());
             }
             for (int j = 0; j < filled.size(); j++) {
-                if (filled.at(j) % (height-1+SHAPESIZE) < i)
+                if (filled.at(j) % (height+1) < i && i > 0)
                     filled.at(j) += 1;
             }
         }
@@ -379,23 +381,24 @@ std::vector<int> row_clear(char* grid, const int width, const int height, std::v
 
 std::vector<int> getshape(char* grid, const int width, const int height, int* xpos, int* ypos, char* realshape, std::vector<int> rfilled, const int middle) {
     rfilled = save_shape(grid, (width), (height), realshape, SHAPESIZE, *xpos, *ypos, rfilled);
-                        if (0 + (rand() % static_cast<int>(6 - 0 + 1)) == 0)
-                            memcpy(realshape, s_shape, QSHAPESIZE);
-                        else if (0 + (rand() % static_cast<int>(6 - 0 + 1)) == 1)
-                            memcpy(realshape, z_shape, QSHAPESIZE);
-                        else if (0 + (rand() % static_cast<int>(6 - 0 + 1)) == 2)
-                            memcpy(realshape, i_shape, QSHAPESIZE);
-                        else if (0 + (rand() % static_cast<int>(6 - 0 + 1)) == 3)
-                            memcpy(realshape, t_shape, QSHAPESIZE);
-                        else if (0 + (rand() % static_cast<int>(6 - 0 + 1)) == 4)
-                            memcpy(realshape, l_shape, QSHAPESIZE);
-                        else if (0 + (rand() % static_cast<int>(6 - 0 + 1)) == 5)
-                            memcpy(realshape, rl_shape, QSHAPESIZE);
-                        else if (0 + (rand() % static_cast<int>(6 - 0 + 1)) == 6)
-                            memcpy(realshape, q_shape, QSHAPESIZE);
+    int random_range = 0 + (rand() % static_cast<int>(6 - 0 + 1));
+    if (random_range == 0)
+        memcpy(realshape, s_shape, QSHAPESIZE);
+    else if (random_range == 1)
+        memcpy(realshape, z_shape, QSHAPESIZE);
+    else if (random_range == 2)
+        memcpy(realshape, i_shape, QSHAPESIZE);
+    else if (random_range == 3)
+        memcpy(realshape, t_shape, QSHAPESIZE);
+    else if (random_range == 4)
+        memcpy(realshape, l_shape, QSHAPESIZE);
+    else if (random_range == 5)
+        memcpy(realshape, rl_shape, QSHAPESIZE);
+    else if (random_range == 6)
+        memcpy(realshape, q_shape, QSHAPESIZE);
 
-                        *xpos = middle;
-                        *ypos = newpos(realshape, SHAPESIZE);
+    *xpos = middle;
+    *ypos = newpos(realshape, SHAPESIZE);
     rfilled = row_clear(grid, width, height, rfilled);
     return rfilled;
 }
@@ -407,8 +410,14 @@ void prerun(char* grid, const int width, const int height, int* xpos, int* ypos,
             grid[rfilled.at(i)] = 'O';
         }
         //system("cls");
-        print_grid(grid, (WIDTH + 2), (HEIGHT + 1 + SHAPESIZE));
+        //print_grid(grid, (WIDTH + 2), (HEIGHT + 1 + SHAPESIZE));
 }
+
+/*void set_mv(char* mv) {
+    while (true)
+        *mv = key_press();
+        cout << *mv;
+}*/
 
 int main()
 {
@@ -429,8 +438,8 @@ int main()
     realshape = (char*)malloc(QSHAPESIZE);
     shape.xpos = middle;
     //shape.ypos = newpos(realshape, SHAPESIZE);
-    //memcpy(realshape, i_shape, QSHAPESIZE);
-    if (0 + (rand() % static_cast<int>(6 - 0 + 1)) == 0)
+    memcpy(realshape, i_shape, QSHAPESIZE);
+    /*if (0 + (rand() % static_cast<int>(6 - 0 + 1)) == 0)
         memcpy(realshape, s_shape, QSHAPESIZE);
     else if (0 + (rand() % static_cast<int>(6 - 0 + 1)) == 1)
         memcpy(realshape, z_shape, QSHAPESIZE);
@@ -443,32 +452,45 @@ int main()
     else if (0 + (rand() % static_cast<int>(6 - 0 + 1)) == 5)
         memcpy(realshape, rl_shape, QSHAPESIZE);
     else if (0 + (rand() % static_cast<int>(6 - 0 + 1)) == 6)
-        memcpy(realshape, q_shape, QSHAPESIZE);
+        memcpy(realshape, q_shape, QSHAPESIZE);*/
     getshape(grid, WIDTH+2, HEIGHT + 1 + SHAPESIZE, nxpos, nypos, realshape, rfilled, middle);
-    char mv;
+    char *mv = new char;
+    //std::thread key_thread (set_mv, mv);
+    std::thread key_thread (key_press, std::ref(mv));
+    int counter = 0;
     while (true) {
-        prerun(grid, WIDTH + 2, HEIGHT + 1 + SHAPESIZE, nxpos, nypos, realshape, rfilled);
-        mv = key_press();
-
+        *mv = 0;
+        if (counter > 40)
+            counter = 0;
+        usleep(10000);
+        //prerun(grid, WIDTH + 2, HEIGHT + 1 + SHAPESIZE, nxpos, nypos, realshape, rfilled);
+        //print_grid(grid, (WIDTH + 2), (HEIGHT + 1 + SHAPESIZE));
 
 
         // Actions
-        if (mv == 'd') {
+        if (*mv == 'd') {
             if (collision_check(grid, (WIDTH + 2), (HEIGHT + 1 + SHAPESIZE), realshape, SHAPESIZE, shape.xpos, shape.ypos, true))
                 shape.xpos += 1;
+                prerun(grid, WIDTH + 2, HEIGHT + 1 + SHAPESIZE, nxpos, nypos, realshape, rfilled);
+                print_grid(grid, (WIDTH + 2), (HEIGHT + 1 + SHAPESIZE));
+                counter += 2;
         }
-        if (mv == 'a') {
+        else if (*mv == 'a') {
             if (collision_check(grid, (WIDTH + 2), (HEIGHT + 1 + SHAPESIZE), realshape, SHAPESIZE, shape.xpos, shape.ypos, false))
                 shape.xpos -= 1;
+                prerun(grid, WIDTH + 2, HEIGHT + 1 + SHAPESIZE, nxpos, nypos, realshape, rfilled);
+                print_grid(grid, (WIDTH + 2), (HEIGHT + 1 + SHAPESIZE));
+                counter += 2;
         }
-        if (mv == 's' || mv == 'f') {
-            if (mv == 's' && drop_check(grid, (WIDTH + 2), HEIGHT + 1 + SHAPESIZE, realshape, SHAPESIZE, shape.xpos, shape.ypos))
+        else if (*mv == 's' || *mv == 'f') {
+            if (*mv == 's' && drop_check(grid, (WIDTH + 2), HEIGHT + 1 + SHAPESIZE, realshape, SHAPESIZE, shape.xpos, shape.ypos)) {
                 shape.ypos += 1;
-            else if(mv == 'f') {
+            }
+            else if(*mv == 'f') {
                 while (true) {
                     if (drop_check(grid, (WIDTH + 2), HEIGHT + 1 + SHAPESIZE, realshape, SHAPESIZE, shape.xpos, shape.ypos)) {
                         shape.ypos += 1;
-                        prerun(grid, WIDTH + 2, HEIGHT + 1 + SHAPESIZE, nxpos, nypos, realshape, rfilled);
+                        //prerun(grid, WIDTH + 2, HEIGHT + 1 + SHAPESIZE, nxpos, nypos, realshape, rfilled);
                     }
                     else {
                         rfilled = getshape(grid, WIDTH+2, HEIGHT + 1 + SHAPESIZE, nxpos, nypos, realshape, rfilled, middle);
@@ -479,10 +501,31 @@ int main()
             else {
                 rfilled = getshape(grid, WIDTH+2, HEIGHT + 1 + SHAPESIZE, nxpos, nypos, realshape, rfilled, middle);
             }
+            prerun(grid, WIDTH + 2, HEIGHT + 1 + SHAPESIZE, nxpos, nypos, realshape, rfilled);
+            print_grid(grid, (WIDTH + 2), (HEIGHT + 1 + SHAPESIZE));
+            counter += 2;
         }
-        if (mv == 'w') {
+        else if (*mv == 'w') {
+            //print_grid(grid, (WIDTH + 2), (HEIGHT + 1 + SHAPESIZE));
             rotate(realshape,SHAPESIZE);
+            prerun(grid, WIDTH + 2, HEIGHT + 1 + SHAPESIZE, nxpos, nypos, realshape, rfilled);
+            print_grid(grid, (WIDTH + 2), (HEIGHT + 1 + SHAPESIZE));
+            counter += 2;
         }
+        
+        else if (counter == 40 && drop_check(grid, (WIDTH + 2), HEIGHT + 1 + SHAPESIZE, realshape, SHAPESIZE, shape.xpos, shape.ypos)) {
+            shape.ypos += 1;
+            prerun(grid, WIDTH + 2, HEIGHT + 1 + SHAPESIZE, nxpos, nypos, realshape, rfilled);
+            print_grid(grid, (WIDTH + 2), (HEIGHT + 1 + SHAPESIZE));
+            counter += 2;
+        }
+        else if (counter == 40) {
+            rfilled = getshape(grid, WIDTH+2, HEIGHT + 1 + SHAPESIZE, nxpos, nypos, realshape, rfilled, middle);
+            prerun(grid, WIDTH + 2, HEIGHT + 1 + SHAPESIZE, nxpos, nypos, realshape, rfilled);
+            print_grid(grid, (WIDTH + 2), (HEIGHT + 1 + SHAPESIZE));
+            counter += 2;
+        }
+        counter += 1;
     }
 
     delete[] grid;
