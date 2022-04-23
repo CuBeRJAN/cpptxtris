@@ -447,11 +447,14 @@ int main()
     int counter = 0;
     float float_ms=0;
     const int max_counter = 60;
+    int toSleep;
     while (true) {
         *mv = 0;
         if (counter > max_counter)
             counter = 0;
-        usleep(10000-float_ms);
+        //usleep(10000-float_ms);
+        toSleep = 10000-float_ms;
+        std::this_thread::sleep_for(std::chrono::microseconds(toSleep));
         //prerun(grid, WIDTH + 2, HEIGHT + 1 + SHAPESIZE, nxpos, nypos, realshape, rfilled);
         //print_grid(grid, (WIDTH + 2), (HEIGHT + 1 + SHAPESIZE));
         auto start = std::chrono::high_resolution_clock::now();
