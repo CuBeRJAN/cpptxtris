@@ -13,6 +13,8 @@ using std::string;
 using std::cout;
 using std::cin;
 
+int pieces[] = {0,1,2,3,4,5,6};
+int pindex = 0;
 
 // TODO: game end, check collision for rotation, score counter, game speedup
 
@@ -389,22 +391,36 @@ std::vector<int> row_clear(char* grid, const int width, const int height, std::v
     return filled;
 }
 
+void piece_shuffle() {
+    std::random_shuffle(&pieces[0], &pieces[6]);
+}
+
+int cpiece() {
+    ++pindex;
+    if (pindex > 6) {
+        piece_shuffle();
+        pindex = 0;
+    }
+    return(pieces[pindex]);
+}
+
 std::vector<int> getshape(char* grid, const int width, const int height, int* xpos, int* ypos, char* realshape, std::vector<int> rfilled, const int middle) {
     rfilled = save_shape(grid, (width), (height), realshape, SHAPESIZE, *xpos, *ypos, rfilled);
-    int random_range = 0 + (rand() % static_cast<int>(6 - 0 + 1));
-    if (random_range == 0)
+    //int random_range = 0 + (rand() % static_cast<int>(6 - 0 + 1));
+    int whichPiece = cpiece();
+    if (whichPiece == 0)
         memcpy(realshape, s_shape, QSHAPESIZE);
-    else if (random_range == 1)
+    else if (whichPiece == 1)
         memcpy(realshape, z_shape, QSHAPESIZE);
-    else if (random_range == 2)
+    else if (whichPiece == 2)
         memcpy(realshape, i_shape, QSHAPESIZE);
-    else if (random_range == 3)
+    else if (whichPiece == 3)
         memcpy(realshape, t_shape, QSHAPESIZE);
-    else if (random_range == 4)
+    else if (whichPiece == 4)
         memcpy(realshape, l_shape, QSHAPESIZE);
-    else if (random_range == 5)
+    else if (whichPiece == 5)
         memcpy(realshape, rl_shape, QSHAPESIZE);
-    else if (random_range == 6)
+    else if (whichPiece == 6)
         memcpy(realshape, q_shape, QSHAPESIZE);
 
     *xpos = middle;
@@ -425,6 +441,7 @@ void prerun(char* grid, const int width, const int height, int* xpos, int* ypos,
 int main()
 {
     srand((unsigned)time(0)); 
+    piece_shuffle();
     char* grid;
     grid = new char[(WIDTH + 2) * (HEIGHT + 1 + SHAPESIZE)];
     struct {
