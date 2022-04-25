@@ -23,7 +23,7 @@ const string green = "\033[92m";
 const string yellow = "\033[33m";
 const string color_end = "\033[0m";
 
-
+std::vector<int> current_piece;
 std::vector<int> cyan_saved;
 std::vector<int> magenta_saved;
 std::vector<int> red_saved;
@@ -43,42 +43,42 @@ char current_color;
 
 // shapes must be square and 5x5
 // shape will be rotated around central piece
-const char i_shape[] = { '.', '.', 'O', '.', '.', // SHAPE "I"
-                         '.', '.', 'O', '.', '.',
-                         '.', '.', 'O', '.', '.',
-                         '.', '.', 'O', '.', '.',
-                         '.', '.', '.', '.', '.' };
+const char i_shape[] = { ' ', ' ', 'O', ' ', ' ', // SHAPE "I"
+                         ' ', ' ', 'O', ' ', ' ',
+                         ' ', ' ', 'O', ' ', ' ',
+                         ' ', ' ', 'O', ' ', ' ',
+                         ' ', ' ', ' ', ' ', ' ' };
 
-const char s_shape[] = { '.', '.', '.', '.', '.', // SHAPE "S"
-                         '.', '.', '.', 'O', '.',
-                         '.', '.', 'O', 'O', '.',
-                         '.', '.', 'O', '.', '.',
-                         '.', '.', '.', '.', '.' };
-const char z_shape[] = { '.', '.', '.', '.', '.', // SHAPE "Z"
-                         '.', 'O', '.', '.', '.',
-                         '.', 'O', 'O', '.', '.',
-                         '.', '.', 'O', '.', '.',
-                         '.', '.', '.', '.', '.' };
-const char q_shape[] = { '.', '.', '.', '.', '.', // SHAPE "Q"
-                         '.', '.', '.', '.', '.',
-                         '.', '.', 'O', 'O', '.',
-                         '.', '.', 'O', 'O', '.',
-                         '.', '.', '.', '.', '.' };
-const char l_shape[] = { '.', '.', '.', '.', '.', // SHAPE "L"
-                         '.', '.', 'O', '.', '.',
-                         '.', '.', 'O', '.', '.',
-                         '.', '.', 'O', 'O', '.',
-                         '.', '.', '.', '.', '.' };
-const char rl_shape[] = { '.', '.', '.', '.', '.', // SHAPE "L (reverse)"
-                          '.', '.', 'O', '.', '.',
-                          '.', '.', 'O', '.', '.',
-                          '.', 'O', 'O', '.', '.',
-                          '.', '.', '.', '.', '.' };
-const char t_shape[] = { '.', '.', '.', '.', '.', // SHAPE "T"
-                         '.', '.', 'O', '.', '.',
-                         '.', 'O', 'O', 'O', '.',
-                         '.', '.', '.', '.', '.',
-                         '.', '.', '.', '.', '.' };
+const char s_shape[] = { ' ', ' ', ' ', ' ', ' ', // SHAPE "S"
+                         ' ', ' ', ' ', 'O', ' ',
+                         ' ', ' ', 'O', 'O', ' ',
+                         ' ', ' ', 'O', ' ', ' ',
+                         ' ', ' ', ' ', ' ', ' ' };
+const char z_shape[] = { ' ', ' ', ' ', ' ', ' ', // SHAPE "Z"
+                         ' ', 'O', ' ', ' ', ' ',
+                         ' ', 'O', 'O', ' ', ' ',
+                         ' ', ' ', 'O', ' ', ' ',
+                         ' ', ' ', ' ', ' ', ' ' };
+const char q_shape[] = { ' ', ' ', ' ', ' ', ' ', // SHAPE "Q"
+                         ' ', ' ', ' ', ' ', ' ',
+                         ' ', ' ', 'O', 'O', ' ',
+                         ' ', ' ', 'O', 'O', ' ',
+                         ' ', ' ', ' ', ' ', ' ' };
+const char l_shape[] = { ' ', ' ', ' ', ' ', ' ', // SHAPE "L"
+                         ' ', ' ', 'O', ' ', ' ',
+                         ' ', ' ', 'O', ' ', ' ',
+                         ' ', ' ', 'O', 'O', ' ',
+                         ' ', ' ', ' ', ' ', ' ' };
+const char rl_shape[] = { ' ', ' ', ' ', ' ', ' ', // SHAPE "L (reverse)"
+                          ' ', ' ', 'O', ' ', ' ',
+                          ' ', ' ', 'O', ' ', ' ',
+                          ' ', 'O', 'O', ' ', ' ',
+                          ' ', ' ', ' ', ' ', ' ' };
+const char t_shape[] = { ' ', ' ', ' ', ' ', ' ', // SHAPE "T"
+                         ' ', ' ', 'O', ' ', ' ',
+                         ' ', 'O', 'O', 'O', ' ',
+                         ' ', ' ', ' ', ' ', ' ',
+                         ' ', ' ', ' ', ' ', ' ' };
 
 
 
@@ -282,7 +282,8 @@ void get_new_color() {
 }
 
 void print_grid(const char* grid, const int width, const int height) {
-    const char border = '#';
+    //const char border = '#';
+    const string border = "\033[90m#\033[0m";
     string cstr;
     cstr += "\n";
     for (int i = 0; i < width; i++) {
@@ -293,11 +294,44 @@ void print_grid(const char* grid, const int width, const int height) {
     for (int i = SHAPESIZE; i < height - 1; i++) {
         for (int j = 1; j < width - 1; j++) {
             if (j == 1) cstr += border;
-            cstr += grid[(height * j) + i];
-            auto it = find(red_saved.begin(), red_saved.end(), (height * j) + i);
-            if (it != red_saved.end()) {
-                int index = it - red_saved.begin();
+            bool save = false;
+
+            if (std::count(red_saved.begin(), red_saved.end(), (height * j) + i)) {
+                cstr += red;
+                save = true;
             }
+            else if (std::count(green_saved.begin(), green_saved.end(), (height * j) + i)) {
+                cstr += green;
+                save = true;
+            }
+            else if (std::count(cyan_saved.begin(), cyan_saved.end(), (height * j) + i)) {
+                cstr += cyan;
+                save = true;
+            }
+            else if (std::count(yellow_saved.begin(), yellow_saved.end(), (height * j) + i)) {
+                cstr += yellow;
+                save = true;
+            }
+            else if (std::count(magenta_saved.begin(), magenta_saved.end(), (height * j) + i)) {
+                cstr += magenta;
+                save = true;
+            }
+            else if (std::count(current_piece.begin(), current_piece.end(), (height * j) + i) && grid[(height*j)+i] == 'O') {
+                if (current_color == 'r') cstr += red;
+                else if (current_color == 'g') cstr += green;
+                else if (current_color == 'y') cstr += yellow;
+                else if (current_color == 'c') cstr += cyan;
+                else if (current_color == 'm') cstr += magenta;
+                save = true;
+            }
+            cstr += grid[(height * j) + i];
+            if (save) {
+                cstr += color_end;
+            }
+
+
+
+
             if (j == width - 2) cstr += border;
         }
         cstr += "\n";
@@ -383,10 +417,12 @@ std::vector<int> save_shape(char* grid, const int width, const int height, const
 
 
 void render_shape(char* grid, const int width, const int height, const char shape[], const int size, const int xpos, const int ypos) {
+    current_piece.clear();
     for (int i = 0; i < size; i++) {
         for (int j = 0; j < size; j++) {
             if (ypos + (height * j) + i + (xpos * height) < width * height && ypos + (height * j) + i + (xpos * height) > 0)
                 grid[ypos + (height * j) + i + (xpos * height)] = shape[(size * i) + j];
+                current_piece.push_back(ypos + (height * j) + i + (xpos * height));
         }
     }
 }
@@ -451,6 +487,26 @@ std::vector<int> row_clear(char* grid, const int width, const int height, std::v
                 if (filled.at(j) % (height) < i)
                     filled.at(j) += 1;
             }
+            for (int j = 0; j < red_saved.size(); j++) {
+                if (red_saved.at(j) % (height) < i)
+                    red_saved.at(j) += 1;
+            }
+            for (int j = 0; j < green_saved.size(); j++) {
+                if (green_saved.at(j) % (height) < i)
+                    green_saved.at(j) += 1;
+            }
+            for (int j = 0; j < magenta_saved.size(); j++) {
+                if (magenta_saved.at(j) % (height) < i)
+                    magenta_saved.at(j) += 1;
+            }
+            for (int j = 0; j < yellow_saved.size(); j++) {
+                if (yellow_saved.at(j) % (height) < i)
+                    yellow_saved.at(j) += 1;
+            }
+            for (int j = 0; j < cyan_saved.size(); j++) {
+                if (cyan_saved.at(j) % (height) < i)
+                    cyan_saved.at(j) += 1;
+            }
         }
     }
     return filled;
@@ -496,7 +552,7 @@ std::vector<int> getshape(char* grid, const int width, const int height, int* xp
 }
 
 void prerun(char* grid, const int width, const int height, int* xpos, int* ypos, char* realshape, std::vector<int> rfilled) {
-    init_grid(grid, (WIDTH + 2) * (HEIGHT + 1 + SHAPESIZE), '.');
+    init_grid(grid, (WIDTH + 2) * (HEIGHT + 1 + SHAPESIZE), ' ');
     render_shape(grid, (WIDTH + 2), (HEIGHT + 1 + SHAPESIZE), realshape, SHAPESIZE, *xpos, *ypos);
     for (int i = 0; i < (rfilled.size()); i++) {
         grid[rfilled.at(i)] = 'O';
@@ -528,7 +584,7 @@ int main()
     char* mv = new char;
     std::thread key_thread(key_press, std::ref(mv));
     int counter = 0;
-    const int max_counter = 30;
+    const int max_counter = 45;
     auto start = std::chrono::high_resolution_clock::now();
     auto end = std::chrono::high_resolution_clock::now();
     auto wait = std::chrono::microseconds(10000);
