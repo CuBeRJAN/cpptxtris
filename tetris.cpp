@@ -487,8 +487,8 @@ int main()
             counter = 0;
         //usleep(10000-float_ms);
         toadd = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
-        cout << toadd;
-        std::this_thread::sleep_for(std::chrono::microseconds(10000-(toadd*100)));
+        //cout << toadd;
+        std::this_thread::sleep_for(std::chrono::microseconds(10000-(toadd*10)));
         //prerun(grid, WIDTH + 2, HEIGHT + 1 + SHAPESIZE, nxpos, nypos, realshape, rfilled);
         //print_grid(grid, (WIDTH + 2), (HEIGHT + 1 + SHAPESIZE));
         start = std::chrono::high_resolution_clock::now();
