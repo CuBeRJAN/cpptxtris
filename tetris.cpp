@@ -1,12 +1,12 @@
 #include <iostream>
-#include<string.h>
+#include <string.h>
 #include <vector>
 #include <cmath>
-#include<future>
+#include <future>
 #include <cstdlib> 
 #include <ctime> 
 #include <thread> 
-#include<chrono>
+#include <chrono>
 #include <algorithm>
 
 using std::string;
@@ -16,11 +16,28 @@ using std::cin;
 int pieces[] = { 0,1,2,3,4,5,6 };
 int pindex = 0;
 
+const string cyan = "\033[36m";
+const string magenta = "\033[35m";
+const string red = "\033[91m";
+const string green = "\033[92m";
+const string yellow = "\033[33m";
+const string color_end = "\033[0m";
+
+
+std::vector<int> cyan_saved;
+std::vector<int> magenta_saved;
+std::vector<int> red_saved;
+std::vector<int> green_saved;
+std::vector<int> yellow_saved;
+const char colors[5] = { 'c','m','r','g','y' };
+char current_color;
+
+
 // TODO: game end, check collision for rotation, score counter, game speedup
 
 
 #define WIDTH 10 // 10
-#define HEIGHT 16 // 12
+#define HEIGHT 16 // 16
 #define SHAPESIZE 5 // 5
 #define QSHAPESIZE 25 // 5*5
 
@@ -74,6 +91,8 @@ void scr_clear() {
 }
 void game_quit() {
     cout << "Game over!\n";
+    char x;
+    cin >> x;
     exit(0);
 }
 int key_press(char* mv) { // not working: F11 (-122, toggles fullscreen)
@@ -257,6 +276,11 @@ void init_grid(char* grid, int size, const char fill) {
     }
 }
 
+void get_new_color() {
+    int random_range = 0 + (rand() % static_cast<int>(4 - 0 + 1));
+    current_color = colors[random_range];
+}
+
 void print_grid(const char* grid, const int width, const int height) {
     const char border = '#';
     string cstr;
@@ -328,6 +352,25 @@ std::vector<int> save_shape(char* grid, const int width, const int height, const
         for (int j = 0; j < size; j++) {
             if (ypos + (height * j) + i + (xpos * height) < width * height && ypos + (height * j) + i + (xpos * height) > 0 && shape[(size * i) + j] == 'O') {
                 filled.push_back(ypos + (height * j) + i + (xpos * height));
+                switch (current_color) {
+                    case 'r':
+                        red_saved.push_back(ypos + (height * j) + i + (xpos * height));
+                        break;
+                    case 'g':
+                        green_saved.push_back(ypos + (height * j) + i + (xpos * height));
+                        break;
+                    case 'm':
+                        magenta_saved.push_back(ypos + (height * j) + i + (xpos * height));
+                        break;
+                    case 'c':
+                        cyan_saved.push_back(ypos + (height * j) + i + (xpos * height));
+                        break;
+                    case 'y':
+                        yellow_saved.push_back(ypos + (height * j) + i + (xpos * height));
+                        break;
+                    default:
+                        break;
+                }
             }
         }
     }
@@ -381,7 +424,7 @@ int newpos(const char* shape, const int shape_size) {
 
 std::vector<int> row_clear(char* grid, const int width, const int height, std::vector<int> filled) {
     bool toClear;
-    int arr[WIDTH+2];
+    int arr[WIDTH + 2];
     int index = 0;
     std::vector<int> rows;
     for (int i = SHAPESIZE; i < height + SHAPESIZE + 1; i++) {
@@ -394,6 +437,11 @@ std::vector<int> row_clear(char* grid, const int width, const int height, std::v
         if (toClear) {
             for (int j = 0; j < width; j++) {
                 filled.erase(std::remove(filled.begin(), filled.end(), (int)arr[j]), filled.end());
+                magenta_saved.erase(std::remove(magenta_saved.begin(), magenta_saved.end(), (int)arr[j]), magenta_saved.end());
+                yellow_saved.erase(std::remove(yellow_saved.begin(), yellow_saved.end(), (int)arr[j]), yellow_saved.end());
+                red_saved.erase(std::remove(red_saved.begin(), red_saved.end(), (int)arr[j]), red_saved.end());
+                cyan_saved.erase(std::remove(cyan_saved.begin(), cyan_saved.end(), (int)arr[j]), cyan_saved.end());
+                green_saved.erase(std::remove(green_saved.begin(), green_saved.end(), (int)arr[j]), green_saved.end());
             }
             for (int j = 0; j < filled.size(); j++) {
                 if (filled.at(j) % (height) < i)
@@ -420,6 +468,7 @@ int cpiece() {
 std::vector<int> getshape(char* grid, const int width, const int height, int* xpos, int* ypos, char* realshape, std::vector<int> rfilled, const int middle) {
     rfilled = save_shape(grid, (width), (height), realshape, SHAPESIZE, *xpos, *ypos, rfilled);
     //int random_range = 0 + (rand() % static_cast<int>(6 - 0 + 1));
+    get_new_color();
     int whichPiece = cpiece();
     if (whichPiece == 0)
         memcpy(realshape, s_shape, QSHAPESIZE);
@@ -475,7 +524,7 @@ int main()
     char* mv = new char;
     std::thread key_thread(key_press, std::ref(mv));
     int counter = 0;
-    const int max_counter = 45;
+    const int max_counter = 30;
     auto start = std::chrono::high_resolution_clock::now();
     auto end = std::chrono::high_resolution_clock::now();
     auto wait = std::chrono::microseconds(10000);
@@ -488,7 +537,7 @@ int main()
         //usleep(10000-float_ms);
         toadd = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
         //cout << toadd;
-        std::this_thread::sleep_for(std::chrono::microseconds(5000-(toadd*100)));
+        std::this_thread::sleep_for(std::chrono::microseconds(5000 - (toadd * 100)));
         //prerun(grid, WIDTH + 2, HEIGHT + 1 + SHAPESIZE, nxpos, nypos, realshape, rfilled);
         //print_grid(grid, (WIDTH + 2), (HEIGHT + 1 + SHAPESIZE));
         start = std::chrono::high_resolution_clock::now();
