@@ -20,7 +20,7 @@ int pindex = 0;
 
 
 #define WIDTH 10 // 10
-#define HEIGHT 12 // 12
+#define HEIGHT 16 // 12
 #define SHAPESIZE 5 // 5
 #define QSHAPESIZE 25 // 5*5
 
@@ -488,7 +488,7 @@ int main()
         //usleep(10000-float_ms);
         toadd = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
         //cout << toadd;
-        std::this_thread::sleep_for(std::chrono::microseconds(10000-(toadd*10)));
+        std::this_thread::sleep_for(std::chrono::microseconds(10000-(toadd*100)));
         //prerun(grid, WIDTH + 2, HEIGHT + 1 + SHAPESIZE, nxpos, nypos, realshape, rfilled);
         //print_grid(grid, (WIDTH + 2), (HEIGHT + 1 + SHAPESIZE));
         start = std::chrono::high_resolution_clock::now();
