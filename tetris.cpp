@@ -584,7 +584,7 @@ int main()
     char* mv = new char;
     std::thread key_thread(key_press, std::ref(mv));
     int counter = 0;
-    const int max_counter = 6;
+    const int max_counter = 38;
     auto start = std::chrono::high_resolution_clock::now();
     auto end = std::chrono::high_resolution_clock::now();
     auto wait = std::chrono::microseconds(10000);
@@ -597,7 +597,7 @@ int main()
         //usleep(10000-float_ms);
         toadd = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
         //cout << toadd;
-        std::this_thread::sleep_for(std::chrono::microseconds(50000 - (toadd*35)));
+        std::this_thread::sleep_for(std::chrono::microseconds(10000 - (toadd*100)));
         //prerun(grid, WIDTH + 2, HEIGHT + 1 + SHAPESIZE, nxpos, nypos, realshape, rfilled);
         //print_grid(grid, (WIDTH + 2), (HEIGHT + 1 + SHAPESIZE));
         start = std::chrono::high_resolution_clock::now();
