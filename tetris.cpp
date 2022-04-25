@@ -294,6 +294,10 @@ void print_grid(const char* grid, const int width, const int height) {
         for (int j = 1; j < width - 1; j++) {
             if (j == 1) cstr += border;
             cstr += grid[(height * j) + i];
+            auto it = find(red_saved.begin(), red_saved.end(), (height * j) + i);
+            if (it != red_saved.end()) {
+                int index = it - red_saved.begin();
+            }
             if (j == width - 2) cstr += border;
         }
         cstr += "\n";
