@@ -16,6 +16,7 @@ using std::cin;
 int pieces[] = { 0,1,2,3,4,5,6 };
 int pindex = 0;
 
+string ostr;
 const string cyan = "\033[36m";
 const string magenta = "\033[35m";
 const string red = "\033[91m";
@@ -339,7 +340,11 @@ void print_grid(const char* grid, const int width, const int height) {
     for (int i = 0; i < width; i++) {
         cstr += border;
     }
-    cout << cstr << "";
+    if (cstr != ostr) {
+        scr_clear();
+        cout << cstr << "";
+    }
+    ostr = cstr;
 }
 
 bool collision_check(const char* grid, const int width, const int height, const char shape[], const int size, const int xpos, const int ypos, const bool toRight) {
@@ -557,7 +562,7 @@ void prerun(char* grid, const int width, const int height, int* xpos, int* ypos,
     for (int i = 0; i < (rfilled.size()); i++) {
         grid[rfilled.at(i)] = 'O';
     }
-    scr_clear();
+    //scr_clear();
 }
 
 int main()
