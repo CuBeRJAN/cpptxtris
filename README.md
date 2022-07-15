@@ -1,5 +1,6 @@
 # cpptxtris
-A small terminal tetris clone in C++
+A small terminal tetris clone in C++  
+Spaghetti code ahead
 
 ```bash
 g++ tetris.cpp -O2 -o tetris
